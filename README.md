@@ -9,11 +9,19 @@ The current most accurate model will be saved to a database file. At this versio
 
 # HOW?
 1. Clone repo:
-	git clone git@github.com:bfelder/MYONN myonn/
+
+```git clone git@github.com:bfelder/MYONN myonn/```
+
 2. Go to folder:
-	cd myonn/myonn/
+
+```cd myonn/myonn/```
+
 3. Install requirements:
-	pip install -r requirements.txt 
+
+```pip install -r requirements.txt``` 
+
 4. Start program:
-	python3 myonn.py
+
+```python3 myonn.py```
+
 5. On first run MNIST data is retrieved automatically for you. :-)
