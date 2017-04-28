@@ -252,9 +252,10 @@ def run_experiment(hidden_layers, hidden_nodes, learning_rate, epochs):
 
     accuracy = calc_accuracy(scorecard)
 
+    training_time  = str(datetime.timedelta(seconds=t1)))
     # print some info regarding training run
     print("accuracy: {0:.1f}%".format(calc_accuracy(scorecard) * 100))
-    print("training time: {}".format(str(datetime.timedelta(seconds=t1))))
+    print("training time: {}".format(training_time)
     #print("sample size: {}".format(get_sample_size(TRAIN_FILE)))
     print("epochs: {}".format(epochs))
     print("hidden layers: {}".format(hidden_layers))
@@ -289,6 +290,7 @@ def run_experiment(hidden_layers, hidden_nodes, learning_rate, epochs):
             "hidden_layers": 0,
             "hidden_nodes": 0,
             "learning_rate": 0,
+            "training_time": training_time,
             "epochs": 0})
 
         # don't forget to close db connection
