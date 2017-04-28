@@ -8,17 +8,18 @@ from time import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-import wget
 from scipy.special import expit as activation_function  # sigmoid function
 from scipy.special import logit as inverse_activation_function
 
+import wget
+
 # CONFIG
 DATA_DIR = "data"
-WEIGHTS_FILE = "weights.db"
+DATA_FILE = "data.db"  # for statistics
+MODEL_FILE = "model.db"
 
 # DEBUG = True will use smaller dataset, single run and show pictures
-# DEBUG = False will train network with a range of different parameters
-DEBUG = True
+DEBUG = False
 INPUT_NODES = 28**2
 OUTPUT_NODES = 10
 
@@ -154,7 +155,6 @@ def scale_matrix(matrix):
     return matrix / 255 * 0.99 + 0.01
 
 
-# TODO: transform to generator
 def import_data(file_name):
 
     with open(file_name, "r") as f:
@@ -204,6 +204,10 @@ def get_sample_size(file_name):
         sample_size = len(list(reader))
     return sample_size
 
+def best_accuracy(list):
+    max_L = max(records, key=lambda x: x["accuracy"])
+    return max_L["accuracy"]
+
 
 def run_experiment(hidden_layers, hidden_nodes, learning_rate, epochs):
     # init network
@@ -249,15 +253,14 @@ def run_experiment(hidden_layers, hidden_nodes, learning_rate, epochs):
     accuracy = calc_accuracy(scorecard)
 
     # print some info regarding training run
-    print("train and test finished\n\n")
     print("accuracy: {0:.1f}%".format(calc_accuracy(scorecard) * 100))
     print("training time: {}".format(str(datetime.timedelta(seconds=t1))))
-    print("-" * 15)
-    print("sample size: {}".format(get_sample_size(TRAIN_FILE)))
+    #print("sample size: {}".format(get_sample_size(TRAIN_FILE)))
     print("epochs: {}".format(epochs))
     print("hidden layers: {}".format(hidden_layers))
     print("hidden nodes: {}".format(hidden_nodes))
     print("learning rate: {}".format(learning_rate))
+    print("-" * 15 + "\n")
 
     if DEBUG:
         print("\n\nBackquerying the network")
@@ -269,29 +272,70 @@ def run_experiment(hidden_layers, hidden_nodes, learning_rate, epochs):
             plt.show()
     else:
         # save current config to db if better accuracy
-        d = shelve.open(WEIGHTS_FILE)
-        try:
-            data = d["data"]
-            data_accuracy = data["accuracy"]
-        except:
-            d["data"] = {"accuracy": accuracy, "weights": nn.layer_weights}
-        else:
-            # save only if accuracy higher than current best
-            if accuracy > data_accuracy:  # uncomment to save all
-                d["data"] = {"accuracy": accuracy, "weights": nn.layer_weights}
-        finally:
-            d.close()
+        d = shelve.open(DATA_FILE, writeback=True)
+        records = d["records"]  #
+
+        # get best accuracy
+        if records:  # list must be non-empty
+            current_best = best_accuracy(records)
+            # save model only if accuracy higher than current best
+            if accuracy > current_best:
+                #    del d["data"]  # TODO: is this needed? or just writeback=True?
+                d["model"] = nn.layer_weights
+
+        # save current parameter set for later analysis
+        records.append({
+            "accuracy": 0,
+            "hidden_layers": 0,
+            "hidden_nodes": 0,
+            "learning_rate": 0,
+            "epochs": 0})
+
+        # don't forget to close db connection
+        d.close()
+
+
+def init_db():
+    d = shelve.open(DATA_FILE, writeback=True)
+    try:
+        d["records"]
+    except KeyError:
+        d["records"] = []  # initialize list
+
+    try:
+        d["model"]
+    except KeyError:
+        d["model"] = []  # initialize list
+
+    d.close()
 
 
 if __name__ == '__main__':
     ensure_files()  # download training and test data if not present
+    init_db()  # make sure key value pairs are present
     if DEBUG:
         print("Running in DEBUG mode.\n\n")
         run_experiment(hidden_layers=0, hidden_nodes=50, learning_rate=0.2, epochs=1)
     else:
+        start_time = time()
         print("Running combinatorial query over parameters.\n\n")
         for hidden_layers in range(2):
             for hidden_nodes in [50, 80, 150, 200, 300]:
                 for learning_rate in [0.05, 0.1, 0.2, 0.3, 0.5]:
                     for epochs in [2, 3, 5]:
                         run_experiment(hidden_layers, hidden_nodes, learning_rate, epochs)
+        time_delta = time() - start_time
+
+        # print some summarizing statistics
+        d = shelve.open(DATA_FILE, writeback=False)
+        records = d["records"]
+        d.close()
+
+        current_best = best_accuracy(records)
+        print("-" * 15)
+        print("Best accuracy: {}".format())
+        print("Total training time: {}".format(str(datetime.timedelta(seconds=time_delta))))
+        print("Number of experiments: {}".format(len(records))
+        print("Sample size: {}".format(get_sample_size(TRAIN_FILE))
+        print("-" * 15)
+        print("\n\nBest model saved to db file. Access via key \"model\" and have fun!")
