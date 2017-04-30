@@ -16,7 +16,6 @@ import wget
 # CONFIG
 DATA_DIR = "data"
 DATA_FILE = "data.db"  # for statistics
-MODEL_FILE = "model.db"
 
 # DEBUG = True will use smaller dataset, single run and show pictures
 DEBUG = False
@@ -68,9 +67,7 @@ class NeuralNetwork:
         outputs = activation_function(weighted_inputs)
         return outputs
 
-    def __update_weights(self, this_errors, this_outputs, previous_outputs):
-        """ """
-        # TODO: ValueError: operands could not be broadcast together with shapes (10,1) (200,1)
+    def __update_weights(self, this_errors, this_outputs, previous_outputs):           
         x = this_errors * this_outputs * (1.0 - this_outputs)
         updated_weights = self.lr * np.dot(x, np.transpose(previous_outputs))
         return updated_weights
@@ -79,7 +76,7 @@ class NeuralNetwork:
         # convert inputs list to 2d array
         inputs = np.array(inputs_list, ndmin=2).T
         # initialize with inputs, as "outputs from picture"
-        outputs_list = [inputs]  # TODO: indexing does not work this way
+        outputs_list = [inputs]
         for i, weights in enumerate(self.layer_weights):
             this_output = self.__calculate_outputs(weights, outputs_list[i])
             outputs_list.append(this_output)
@@ -104,7 +101,7 @@ class NeuralNetwork:
 
             this_errors = np.dot(weights.T, this_errors)
 
-        # update wieghts
+        # update weights
         self.layer_weights = new_weights_rev[::-1]  # must be reversed
 
     def query(self, inputs_list):
@@ -176,15 +173,14 @@ def gen_target_array(onodes):
     return o_list
 
 
-def plot_matrix(matrix):
-    # what the hell is this doing?
+def plot_matrix(matrix):    
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.set_aspect('equal')
 
     plt.imshow(
         matrix, interpolation='nearest',
-        cmap=plt.cm.Greys)  # use diffetent cmap?
+        cmap=plt.cm.Greys)  
     plt.colorbar()
     plt.show()
 
@@ -272,7 +268,7 @@ def run_experiment(hidden_layers, hidden_nodes, learning_rate, epochs):
             plt.title("Target: " + str(i))
             plt.show()
     else:
-        # save current config to db if better accuracy
+        # save current model to db if it has better accuracy
         d = shelve.open(DATA_FILE, writeback=True)
         records = d["records"]  #
 
@@ -281,7 +277,7 @@ def run_experiment(hidden_layers, hidden_nodes, learning_rate, epochs):
             current_best = best_accuracy(records)
             # save model only if accuracy higher than current best
             if accuracy > current_best:
-                #    del d["data"]  # TODO: is this needed? or just writeback=True?
+                # del d["data"]  # TODO: is this needed? or just writeback=True?
                 d["model"] = nn.layer_weights
 
         # save current parameter set for later analysis
@@ -302,12 +298,12 @@ def init_db():
     try:
         d["records"]
     except KeyError:
-        d["records"] = []  # initialize list
+        d["records"] = []  # initialize records list
 
     try:
         d["model"]
     except KeyError:
-        d["model"] = []  # initialize list
+        d["model"] = []  # initialize model list
 
     d.close()
 
