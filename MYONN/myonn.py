@@ -248,10 +248,10 @@ def run_experiment(hidden_layers, hidden_nodes, learning_rate, epochs):
 
     accuracy = calc_accuracy(scorecard)
 
-    training_time  = str(datetime.timedelta(seconds=t1)))
+    training_time  = str(datetime.timedelta(seconds=t1))
     # print some info regarding training run
     print("accuracy: {0:.1f}%".format(calc_accuracy(scorecard) * 100))
-    print("training time: {}".format(training_time)
+    print("training time: {}".format(training_time))
     #print("sample size: {}".format(get_sample_size(TRAIN_FILE)))
     print("epochs: {}".format(epochs))
     print("hidden layers: {}".format(hidden_layers))
@@ -333,7 +333,7 @@ if __name__ == '__main__':
         print("-" * 15)
         print("Best accuracy: {}".format())
         print("Total training time: {}".format(str(datetime.timedelta(seconds=time_delta))))
-        print("Number of experiments: {}".format(len(records))
-        print("Sample size: {}".format(get_sample_size(TRAIN_FILE))
+        print("Number of experiments: {}".format(len(records)))
+        print("Sample size: {}".format(get_sample_size(TRAIN_FILE)))
         print("-" * 15)
         print("\n\nBest model saved to db file. Access via key \"model\" and have fun!")
